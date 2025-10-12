@@ -284,7 +284,11 @@ const jsonOut = {
   finalTotal,
   attempted
 };
-console.log(JSON.stringify(jsonOut, null, 2));
+console.log("🧾 --- FEEDBACK REPORT --- 🧾");
+console.log(reportOutput); // or whatever variable holds your formatted feedback
+console.log("\n-- JSON OUTPUT --\n");
+console.log(JSON.stringify(finalReport, null, 2));
+console.log("✅ Grading completed successfully!");
 
 // Exit 0 to avoid failing CI; change to non-zero if you want CI to fail on low grade.
 process.exit(0);
