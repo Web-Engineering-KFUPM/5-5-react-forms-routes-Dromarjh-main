@@ -4,28 +4,37 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   grade:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 5-5-react-route-form
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Setup Node.js 18
-        uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '18'
-      - name: Make grader executable
-        run: chmod +x 5-5-react-route-form/script/grade.cjs || true
-      - name: Get commit time
-        id: commit
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Grader Script
         run: |
-          # get last commit time in ISO format
-          GIT_TIME=$(git log -1 --format=%cI || echo "")
-          echo "commit_time=${GIT_TIME}" >> $GITHUB_OUTPUT
-      - name: Run autograder
-        env:
-          COMMIT_TIME: ${{ steps.commit.outputs.commit_time }}
-        run: |
-          5-5-react-route-form/script/grade.cjs
+          echo "Running autograder..."
+          node script/grade.cjs | tee grading_log.txt
+
+      - name: Upload Grading Report as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: grading-report
+          path: |
+            5-5-react-route-form/grading_report.txt
+            5-5-react-route-form/grading_report.json
+            5-5-react-route-form/grading_log.txt
