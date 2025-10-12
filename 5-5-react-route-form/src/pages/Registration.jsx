@@ -2,12 +2,12 @@ import { useState } from "react";
 
 export default function Registration() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [gender, setGender] = useState("");
+
   const [errors, setErrors] = useState({});
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    {/*Form validations*/}
 
     // alert(`Regiteration submit: ${email}`);
   };
@@ -43,7 +43,7 @@ export default function Registration() {
           {/*Radio Button for gender*/}
         </fieldset>
 
-
+          {/*Disable the submit button until all requirements met*/}
         <button type="submit" className="btn">Register</button>
       </form>
 
