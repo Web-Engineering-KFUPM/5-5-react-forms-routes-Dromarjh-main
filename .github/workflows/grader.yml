@@ -1,0 +1,31 @@
+name: Study Buddy Lab Autograder
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Make grader executable
+        run: chmod +x script/grade.cjs || true
+      - name: Get commit time
+        id: commit
+        run: |
+          # get last commit time in ISO format
+          GIT_TIME=$(git log -1 --format=%cI || echo "")
+          echo "commit_time=${GIT_TIME}" >> $GITHUB_OUTPUT
+      - name: Run autograder
+        env:
+          COMMIT_TIME: ${{ steps.commit.outputs.commit_time }}
+        run: |
+          node script/grade.cjs
