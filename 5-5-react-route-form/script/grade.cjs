@@ -2,19 +2,17 @@
 // script/grade.cjs
 // Autograder for Study Buddy Lab (Tasks: Router + Registration form)
 // Node 18+ (CommonJS). Run: node script/grade.cjs
-// Output: human readable report + JSON for CI
+// Output: human readable report + JSON for CI (also writes grading_report.txt and grading_report.json)
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 function readSafe(p) {
   try { return fs.readFileSync(p, 'utf8'); }
   catch (e) { return ''; }
 }
 function exists(p) { try { return fs.existsSync(p); } catch { return false; } }
-function anyMatch(text, patterns) {
-  return patterns.some(p => (p instanceof RegExp) ? p.test(text) : text.includes(p));
-}
 function nowISO() { return (new Date()).toISOString(); }
 
 // -------------------- Config / Due date --------------------
@@ -44,7 +42,7 @@ const filePaths = {
 const appText = filePaths.app ? readSafe(filePaths.app) : '';
 const regText = filePaths.registration ? readSafe(filePaths.registration) : '';
 
-// also collect all src JS/JSX for broader searches
+// collect all src JS/JSX for broader searches
 let allSrcText = '';
 function collectSrcText(dir = path.join(projectRoot, 'src')) {
   try {
@@ -63,7 +61,7 @@ function collectSrcText(dir = path.join(projectRoot, 'src')) {
 }
 collectSrcText();
 
-// -------------------- Checks Helpers --------------------
+// -------------------- Helpers --------------------
 function checkRegex(fileText, regex) {
   if (!fileText) return false;
   return regex.test(fileText);
@@ -74,7 +72,6 @@ function checkAny(fileText, arr) {
 }
 
 // -------------------- TASK 1: React Router --------------------
-// Top-level checks only per instructions
 const t1 = {
   name: 'Apply React Router',
   checks: {
@@ -89,7 +86,6 @@ const t1 = {
 };
 
 // -------------------- TASK 2: Registration form --------------------
-// Checks at top-level (state variables, inputs, validation, errors, disabled button, alert placement)
 const t2 = {
   name: 'Registration Form Enhancements',
   checks: {
@@ -106,90 +102,57 @@ const t2 = {
   }
 };
 
-// Combine email validation as single boolean
 t2.checks.emailValidation = t2.checks.emailValidation_includesAt && t2.checks.emailValidation_endsWithCom;
 
-// -------------------- Scoring Logic --------------------
-// Points: Total 100 (80 tasks + 20 submission)
-// Each task: 40 points = completeness 15 + correctness 15 + code quality 10
-
+// -------------------- Scoring --------------------
 function scoreTask1(checks) {
-  // Completeness (15): imports(3), navlink(4), routes(4), pages present (4)
   const completeness = (checks.importRouter ? 3 : 0) + (checks.navlinkPresent ? 4 : 0) + (checks.routesPresent ? 4 : 0) + ((checks.routeHome && checks.routeAbout && checks.routeRegistration) ? 4 : 0);
-
-  // Correctness (15): route definitions & notfound
   const correctness = ((checks.routeHome && checks.routeAbout && checks.routeRegistration) ? 9 : 0) + (checks.notFoundRoute ? 6 : 0);
-
-  // Quality (10): clear structure & proper NavLink usage
   const quality = (checks.navlinkPresent && checks.importRouter ? 6 : 0) + (checks.notFoundRoute ? 4 : 0);
-
-  return {
-    total: completeness + correctness + quality,
-    breakdown: { completeness, correctness, quality, checks }
-  };
+  return { total: completeness + correctness + quality, breakdown: { completeness, correctness, quality, checks } };
 }
-
 function scoreTask2(checks) {
-  // Completeness (15): passwordState(5), genderState(5), passwordInput+radios(5)
   const completeness = (checks.passwordState ? 5 : 0) + (checks.genderState ? 5 : 0) + ((checks.passwordInput && checks.genderRadios) ? 5 : 0);
-
-  // Correctness (15): email validation(8), errors object(4), alert placement(3)
   const correctness = (checks.emailValidation ? 8 : 0) + (checks.errorsObject ? 4 : 0) + (checks.alertPlacementAfterErrors ? 3 : 0);
-
-  // Quality (10): disabled button(5), clean errors & validation structure(5)
   const quality = (checks.disabledButton ? 5 : 0) + ((checks.errorsObject && checks.emailValidation) ? 5 : 0);
-
-  return {
-    total: completeness + correctness + quality,
-    breakdown: { completeness, correctness, quality, checks }
-  };
+  return { total: completeness + correctness + quality, breakdown: { completeness, correctness, quality, checks } };
 }
 
 const scored1 = scoreTask1(t1.checks);
 const scored2 = scoreTask2(t2.checks);
 
-let tasksTotal = scored1.total + scored2.total; // out of 80
-
-// "Flexible" rule: if student attempted at least one check across tasks and tasksTotal < 60 -> bump to 60
+let tasksTotal = scored1.total + scored2.total;
 const attempted = Object.values(t1.checks).some(Boolean) || Object.values(t2.checks).some(Boolean);
 if (attempted && tasksTotal < 60) tasksTotal = 60;
 
 // -------------------- Submission points --------------------
-// Determine commit time: prefer env COMMIT_TIME or use now()
 let commitTime = null;
 if (process.env.COMMIT_TIME) {
   const parsed = Date.parse(process.env.COMMIT_TIME);
   if (!isNaN(parsed)) commitTime = new Date(parsed);
 }
 if (!commitTime) {
-  // try to read from git (if available)
   try {
-    const { execSync } = require('child_process');
     const gitTime = execSync('git log -1 --format=%cI', { encoding: 'utf8' }).trim();
     const parsed = Date.parse(gitTime);
     if (!isNaN(parsed)) commitTime = new Date(parsed);
-  } catch (e) { /* ignore */ }
+  } catch {}
 }
 if (!commitTime) commitTime = new Date();
 
 const dueDate = new Date(DUE_ISO_UTC);
 const onTime = commitTime.getTime() <= dueDate.getTime();
 const submissionPoints = onTime ? 20 : 10;
-
 const finalTotal = tasksTotal + submissionPoints;
 
-// -------------------- Output: Human-readable + JSON --------------------
-function yesNo(v) { return v ? 'passed' : 'missing'; }
-
+// -------------------- Build reports --------------------
 function sectionReport(title, scored, maxPerTask = 40) {
   const lines = [];
   lines.push(`${title}`);
   lines.push(`Score: ${scored.total}/${maxPerTask}`);
   lines.push('');
-  // Correctness / Completeness / Code Quality breakdowns
   lines.push(`Correctness — ${scored.breakdown.correctness}/15`);
   lines.push('What you achieved:');
-  // Achieved items heuristically listed
   if (scored.breakdown.correctness > 0) {
     if (title.toLowerCase().includes('router')) {
       if (t1.checks.routeHome) lines.push('✅ Home route present');
@@ -237,7 +200,6 @@ function sectionReport(title, scored, maxPerTask = 40) {
     lines.push('❌ Code quality suggestions not yet satisfied.');
   }
 
-  // Per-task checks summary
   lines.push('');
   lines.push('Checks performed:');
   const checkEntries = title.toLowerCase().includes('router') ? t1.checks : t2.checks;
@@ -265,11 +227,9 @@ reportLines.push(`Tasks Total: ${tasksTotal}/80`);
 reportLines.push(`Submission: ${submissionPoints}/20`);
 reportLines.push(`Grand Total: ${finalTotal}/100`);
 reportLines.push('');
-reportLines.push('-- JSON OUTPUT --');
+const reportText = reportLines.join('\n');
 
-console.log(reportLines.join('\n'));
-
-// Emit JSON for CI / parsing
+// JSON output
 const jsonOut = {
   generatedAt: nowISO(),
   commitTime: commitTime.toISOString(),
@@ -284,11 +244,32 @@ const jsonOut = {
   finalTotal,
   attempted
 };
-console.log("🧾 --- FEEDBACK REPORT --- 🧾");
-console.log(reportOutput); // or whatever variable holds your formatted feedback
-console.log("\n-- JSON OUTPUT --\n");
-console.log(JSON.stringify(finalReport, null, 2));
-console.log("✅ Grading completed successfully!");
 
-// Exit 0 to avoid failing CI; change to non-zero if you want CI to fail on low grade.
+// -------------------- Print + Save --------------------
+try {
+  // Print human readable report
+  console.log('🧾 --- FEEDBACK REPORT --- 🧾');
+  console.log(reportText);
+
+  // Print JSON output
+  console.log('\n-- JSON OUTPUT --\n');
+  console.log(JSON.stringify(jsonOut, null, 2));
+
+  // Save copies to files for artifact upload
+  try {
+    const outTxt = path.join(projectRoot, 'grading_report.txt');
+    const outJson = path.join(projectRoot, 'grading_report.json');
+    fs.writeFileSync(outTxt, reportText, 'utf8');
+    fs.writeFileSync(outJson, JSON.stringify(jsonOut, null, 2), 'utf8');
+    console.log(`\n✅ Wrote reports to:\n  - ${outTxt}\n  - ${outJson}`);
+  } catch (e) {
+    console.warn('⚠️ Warning: failed to write report files:', e && e.message);
+  }
+
+  console.log('\n✅ Grading completed successfully!');
+} catch (err) {
+  console.error('❌ Error while producing report:', err && err.stack ? err.stack : err);
+}
+
+// Exit 0 to not fail CI by default
 process.exit(0);
