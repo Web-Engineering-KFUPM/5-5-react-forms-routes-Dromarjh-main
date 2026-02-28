@@ -4,33 +4,35 @@ export default function Registration() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [gender, setGender] = useState("");
-
   const [errors, setErrors] = useState({});
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Form validations
 
     const nextErrors = {};
 
-    // Email validation
-    if (!email.trim()) nextErrors.email = "Email is required";
-    else if (!(email.includes("@") && email.trim().endsWith(".com"))) {
+    // Email validation (top-level explicit check)
+    if (!email) {
+      nextErrors.email = "Email is required";
+    } else if (!email.includes("@") || !email.endsWith(".com")) {
       nextErrors.email = "Enter a valid email address";
     }
 
     // Password validation
-    if (!password.trim()) nextErrors.password = "Password is required";
+    if (!password) {
+      nextErrors.password = "Password is required";
+    }
 
     // Gender validation
-    if (!gender) nextErrors.gender = "Please select your gender";
+    if (!gender) {
+      nextErrors.gender = "Please select your gender";
+    }
 
     setErrors(nextErrors);
 
-    // Stop submit if errors exist
     if (Object.keys(nextErrors).length > 0) return;
 
-    // SUCCESS (only runs when form is valid)
+    // SUCCESS (only when valid)
     alert(`Registration submit: ${email}`);
   };
 
@@ -64,7 +66,6 @@ export default function Registration() {
           <label htmlFor="password">Password</label>
           <input
             id="password"
-            placeholder="Enter a strong password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -88,7 +89,7 @@ export default function Registration() {
               value="male"
               checked={gender === "male"}
               onChange={(e) => setGender(e.target.value)}
-            />{" "}
+            />
             Male
           </label>
 
@@ -99,17 +100,19 @@ export default function Registration() {
               value="female"
               checked={gender === "female"}
               onChange={(e) => setGender(e.target.value)}
-            />{" "}
+            />
             Female
           </label>
 
-          {errors.gender && <p className="error">{errors.gender}</p>}
+          {errors.gender && (
+            <p className="error">{errors.gender}</p>
+          )}
         </fieldset>
 
         <button
           type="submit"
           className="btn"
-          disabled={!email.trim() || !password.trim() || !gender}
+          disabled={!email || !password || !gender}
         >
           Register
         </button>
