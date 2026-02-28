@@ -15,9 +15,7 @@ export default function Home() {
         <div className="card">
           <h3>Latest Announcements</h3>
           <ul className="list">
-            <li>
-              🎉 Course kickoff: <b>Mar 3, 2026</b>
-            </li>
+            <li>🎉 Course kickoff: <b>Nov 3, 2025</b></li>
             <li>📦 Starter repo posted in LMS</li>
             <li>🧪 Lab 1: Router + Form Validation</li>
           </ul>
@@ -26,11 +24,11 @@ export default function Home() {
         <div className="card">
           <h3>Quick Start</h3>
           <ol className="list ordered">
-            <li>Go to the Registration page and complete the TODOs</li>
+            <li>Open the Registration page</li>
             <li>Add a password field</li>
             <li>Add gender radio buttons</li>
             <li>Make all fields required</li>
-            <li>Validate email (@ and .com)</li>
+            <li>Validate email format</li>
           </ol>
         </div>
       </div>
