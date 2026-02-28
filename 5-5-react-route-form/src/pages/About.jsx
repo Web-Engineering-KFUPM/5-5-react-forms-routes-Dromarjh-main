@@ -3,7 +3,7 @@ export default function About() {
     <section>
       <h1>About the Portal</h1>
       <p>
-        This demo app simulates a small university portal used to practice
+        This lab app simulates a small university portal used to practice
         navigation and form handling in React.
       </p>
 
@@ -11,9 +11,9 @@ export default function About() {
         <div className="card">
           <h3>What You’ll Learn</h3>
           <ul className="list">
-            <li>⚙️ Setting up client-side routing</li>
+            <li>⚙️ Setting up routing with React Router (react-router-dom)</li>
             <li>🧠 Controlled inputs with <code>useState</code></li>
-            <li>✅ Validating user input and showing errors</li>
+            <li>✅ Validating user input and showing inline errors</li>
           </ul>
         </div>
 
@@ -22,7 +22,7 @@ export default function About() {
           <p>
             You’re helping the school launch online registration. Start with a
             basic email field, then extend the form to collect secure and
-            complete information.
+            complete information (password + gender) with validation.
           </p>
           <div className="keyline">
             <span className="key">Task</span>

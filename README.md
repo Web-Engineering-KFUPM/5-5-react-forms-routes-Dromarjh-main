@@ -1,11 +1,11 @@
 ### React Lab: Student Registration Portal
 
 > **Note:**
-> Please follow the `app.jsx` file to implement the TODOs.
+> Please follow the `App.jsx` file to implement the TODOs.
 >
-> Please use app.jsx file to perform TODOs and follow the steps strictly to gain good marks in the assignment.  
+> Please use App.jsx file to perform TODOs and follow the steps strictly to gain good marks in the assignment.  
 >  
-> **Due Date:** 2 March, 2026, **11:59 PM**
+> **Due Date:** 2 March, 2026, **11:59 PM**(Asia/Riyadh)
 
 ---
 
@@ -101,7 +101,7 @@ import { Routes, Route } from "react-router-dom";
 <Routes>
   <Route path="/" element={<Home />} />
   <Route path="/about" element={<About />} />
-  <Route path="/contact" element={<Registration />} />
+  <Route path="/registration" element={<Registration />} />
 </Routes>
 ```
 
